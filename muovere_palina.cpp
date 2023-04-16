@@ -8,6 +8,10 @@
 
 using namespace std;
 
+#define KEY_SEEN     1
+#define KEY_RELEASED 2
+
+
 struct coordinate
 {
     double x;
@@ -22,22 +26,31 @@ struct palla {
     bool piena;
 };
 
+struct dim_dysplay {
+    int w;
+    int h;
+};
+
 void init_allegro();        //inizializa la grafica di allegro5
 void install_peri();        //installa le periferiche necesarie
-void inp(ALLEGRO_EVENT event, bool& chiudi);
 
 void pallina(palla& p);     //disegna la pallina
+void muoviPalla(palla& p, unsigned char key[], dim_dysplay dim);    //muovimento della pallina
 
 int main()
 {
     bool chiudi = false;
     palla p;
+    dim_dysplay d;
+
+    d.w = 800;
+    d.h = 600;
 
     p.coordinata.x = 400;
     p.coordinata.y = 300;
     p.raggio = 10;
     p.colore = "red";
-    p.piena = false;
+    p.piena = true;
     
     
     init_allegro();     //inizializazione allegro
@@ -46,7 +59,7 @@ int main()
     
 
     //variabili allegro
-    ALLEGRO_DISPLAY* display = al_create_display(800, 600);
+    ALLEGRO_DISPLAY* display = al_create_display(d.w, d.h);
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 244.0);
     
@@ -57,11 +70,40 @@ int main()
     al_register_event_source(queue, al_get_timer_event_source(timer));
 
 
+    unsigned char key[ALLEGRO_KEY_MAX];
+    memset(key, 0, sizeof(key));
+
     al_start_timer(timer);
     while (true) {
         al_wait_for_event(queue, &event);
 
-        inp(event, chiudi);
+        switch (event.type)
+        {
+        case ALLEGRO_EVENT_TIMER:
+
+            if (key[ALLEGRO_KEY_ESCAPE])
+                chiudi = true;
+            else
+                muoviPalla(p, key, d);
+
+            for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
+                key[i] &= KEY_SEEN;
+
+            break;
+
+        case ALLEGRO_EVENT_KEY_DOWN:
+            key[event.keyboard.keycode] = KEY_SEEN | KEY_RELEASED;
+            //start = true;
+            break;
+
+        case ALLEGRO_EVENT_KEY_UP:
+            key[event.keyboard.keycode] &= KEY_RELEASED;
+            break;
+
+        case ALLEGRO_EVENT_DISPLAY_CLOSE:
+            chiudi = true;
+            break;
+        }
        
         if (chiudi)
             break;
@@ -90,23 +132,6 @@ void install_peri() {
     return;
 }
 
-void inp(ALLEGRO_EVENT event, bool& chiudi) {
-    switch (event.type)
-    {
-    case ALLEGRO_EVENT_TIMER:
-        break;
-
-    case ALLEGRO_KEY_DOWN:
-
-        break;
-
-    case ALLEGRO_EVENT_DISPLAY_CLOSE:
-        chiudi = true;
-        break;
-    }
-    return;
-}
-
 void pallina(palla& p) {
     int r = 0, g = 0, b = 0;
     
@@ -121,5 +146,19 @@ void pallina(palla& p) {
         al_draw_filled_circle(p.coordinata.x, p.coordinata.y, p.raggio, al_map_rgb(r, g, b));
     else
         al_draw_circle(p.coordinata.x, p.coordinata.y, p.raggio, al_map_rgb(r, g, b), 2);
+    return;
+}
+
+void muoviPalla(palla& p, unsigned char key[], dim_dysplay dim) {
+    //muovimento sull'asse x
+    if (((key[ALLEGRO_KEY_A]) || (key[ALLEGRO_KEY_LEFT])) && p.coordinata.x > p.raggio)
+        p.coordinata.x--;
+    if (((key[ALLEGRO_KEY_D]) || (key[ALLEGRO_KEY_RIGHT])) && p.coordinata.x < dim.w - p.raggio)
+        p.coordinata.x++;
+    //muovimento sull'asse y
+    if (((key[ALLEGRO_KEY_W]) || (key[ALLEGRO_KEY_UP])) && p.coordinata.y > p.raggio)
+        p.coordinata.y--;
+    if (((key[ALLEGRO_KEY_S]) || (key[ALLEGRO_KEY_DOWN])) && p.coordinata.y < dim.h - p.raggio)
+        p.coordinata.y++;
     return;
 }
