@@ -43,6 +43,9 @@ void install_peri();        //installa le periferiche necesarie
 void draw_menu(coordinate punta);
 void muovi_menu(coordinate& punta, unsigned char key[], palla& p, bool& men);
 
+void draw_menu2(coordinate punta, palla& pallina);      //sperimentale
+void muovi_menu2(coordinate& punta, unsigned char key[], bool& seleziona);   //muovimento nel menu sperimentale
+
 void draw_triangle(coordinate punta);
 
 void pallina(palla& p);     //disegna la pallina
@@ -52,6 +55,7 @@ int main()
 {
     bool chiudi = false;
     bool men = true;
+    bool selezione = false;
     palla p;
     dim_dysplay d;
     coordinate punta;
@@ -67,7 +71,7 @@ int main()
     p.coordinata.x = 400;
     p.coordinata.y = 300;
     p.raggio = 10;
-    p.colore = "red";
+    p.colore = "blue";
     p.piena = true;
     
     
@@ -100,7 +104,8 @@ int main()
             if (key[ALLEGRO_KEY_ESCAPE])
                 chiudi = true;
             else if (men)
-                muovi_menu(punta, key, p, men);
+                muovi_menu2(punta, key, selezione);
+                //muovi_menu(punta, key, p, men);
             else
                 muoviPalla(p, key, d);
 
@@ -111,7 +116,6 @@ int main()
 
         case ALLEGRO_EVENT_KEY_DOWN:
             key[event.keyboard.keycode] = KEY_SEEN | KEY_RELEASED;
-            //start = true;
             break;
 
         case ALLEGRO_EVENT_KEY_UP:
@@ -128,16 +132,16 @@ int main()
 
         al_clear_to_color(al_map_rgb(200, 200, 200));
 
-        if(men)
-            draw_menu(punta);
+        if (men)
+            draw_menu2(punta, p);
+            //draw_menu(punta);
         else
             pallina(p);
         
 
         al_flip_display();
-
+        
     }
-    
 }
 
 
@@ -225,6 +229,42 @@ void muoviPalla(palla& p, unsigned char key[], dim_dysplay dim) {
         p.coordinata.y--;
     if (((key[ALLEGRO_KEY_S]) || (key[ALLEGRO_KEY_DOWN])) && p.coordinata.y < dim.h - p.raggio)
         p.coordinata.y++;
+
+    return;
+}
+
+//#########################
+//sperimentale
+void draw_menu2(coordinate punta, palla& pallina) {
+    coordinate cP[5];
+    cP[0].x = 300;
+    cP[0].y = 300;
+    for (int i = 1; i < 5; i++) {
+        cP[i].x = cP[i - 1].x + 100;
+        cP[i].y = cP[0].y;
+    }
+    
+
+    al_draw_circle(cP[0].x, cP[0].y, 10, al_map_rgb(0, 0, 0), 3);
+    al_draw_filled_circle(cP[2].x, cP[2].y, 10, al_map_rgb(0, 0, 0));
+
+    draw_triangle(punta);
+
+    return;
+}
+
+//##########################
+void muovi_menu2(coordinate& punta, coordinate opzioni[], unsigned char key[], bool& seleziona) {
+    int i = 0;
+    if (((key[ALLEGRO_KEY_A]) || (key[ALLEGRO_KEY_LEFT])))
+        punta.x -= 100;
+    if (((key[ALLEGRO_KEY_D]) || (key[ALLEGRO_KEY_RIGHT])))
+        punta.x += 100;
+    if (key[ALLEGRO_KEY_ENTER])
+        seleziona = true;
+
+        
+
 
     return;
 }
