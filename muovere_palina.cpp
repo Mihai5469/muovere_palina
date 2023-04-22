@@ -1,5 +1,3 @@
-// muovere_palina.cpp : Questo file contiene la funzione 'main', in cui inizia e termina l'esecuzione del programma.
-//
 
 #include <iostream>
 #include <string>
@@ -40,19 +38,16 @@ struct dim_dysplay {
 
 void init_allegro();        //inizializa la grafica di allegro5
 void install_peri();        //installa le periferiche necesarie
-void draw_menu(coordinate punta);
-void muovi_menu(coordinate& punta, unsigned char key[], palla& p, bool& men);
-
-void draw_menu2(coordinate punta, palla& pallina);      //sperimentale
-void muovi_menu2(coordinate& punta, unsigned char key[], bool& seleziona);   //muovimento nel menu sperimentale
 
 void draw_triangle(coordinate punta);
+void menu(palla& p, ALLEGRO_EVENT& event, bool& chiudi, int& n, bool& men);
 
 void pallina(palla& p);     //disegna la pallina
 void muoviPalla(palla& p, unsigned char key[], dim_dysplay dim);    //muovimento della pallina
 
 int main()
 {
+    int n = 0;
     bool chiudi = false;
     bool men = true;
     bool selezione = false;
@@ -62,7 +57,7 @@ int main()
 
     punta.x = 300;
     punta.y = 320;
-    
+
     //dimensioni finestra
     d.w = 800;
     d.h = 600;
@@ -73,8 +68,8 @@ int main()
     p.raggio = 10;
     p.colore = "blue";
     p.piena = true;
-    
-    
+
+
     init_allegro();     //inizializazione allegro
     install_peri();     //installa le periferiche del computer
 
@@ -82,7 +77,7 @@ int main()
     ALLEGRO_DISPLAY* display = al_create_display(d.w, d.h);
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 244.0);
-    
+
     ALLEGRO_EVENT event;
 
     al_register_event_source(queue, al_get_keyboard_event_source());
@@ -96,51 +91,53 @@ int main()
     al_start_timer(timer);
     while (true) {
         al_wait_for_event(queue, &event);
-        
-        switch (event.type)
-        {
-        case ALLEGRO_EVENT_TIMER:
 
-            if (key[ALLEGRO_KEY_ESCAPE])
-                chiudi = true;
-            else if (men)
-                muovi_menu2(punta, key, selezione);
-                //muovi_menu(punta, key, p, men);
-            else
-                muoviPalla(p, key, d);
-
-            for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
-                key[i] &= KEY_SEEN;
-
-            break;
-
-        case ALLEGRO_EVENT_KEY_DOWN:
-            key[event.keyboard.keycode] = KEY_SEEN | KEY_RELEASED;
-            break;
-
-        case ALLEGRO_EVENT_KEY_UP:
-            key[event.keyboard.keycode] &= KEY_RELEASED;
-            break;
-
-        case ALLEGRO_EVENT_DISPLAY_CLOSE:
-            chiudi = true;
-            break;
-        }
-       
         if (chiudi)
             break;
 
-        al_clear_to_color(al_map_rgb(200, 200, 200));
-
-        if (men)
-            draw_menu2(punta, p);
-            //draw_menu(punta);
+        if (men) {
+            menu(p, event, chiudi, n, men);
+        }
         else
-            pallina(p);
-        
+        {
 
-        al_flip_display();
-        
+            switch (event.type)
+            {
+            case ALLEGRO_EVENT_TIMER:
+
+                if (key[ALLEGRO_KEY_ESCAPE])
+                    chiudi = true;
+                else
+                    muoviPalla(p, key, d);
+
+                for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
+                    key[i] &= KEY_SEEN;
+
+                break;
+
+            case ALLEGRO_EVENT_KEY_DOWN:
+                key[event.keyboard.keycode] = KEY_SEEN | KEY_RELEASED;
+                break;
+
+            case ALLEGRO_EVENT_KEY_UP:
+                key[event.keyboard.keycode] &= KEY_RELEASED;
+                break;
+
+            case ALLEGRO_EVENT_DISPLAY_CLOSE:
+                chiudi = true;
+                break;
+            }
+
+            if (chiudi)
+                break;
+
+            al_clear_to_color(al_map_rgb(200, 200, 200));
+
+            pallina(p);
+
+
+            al_flip_display();
+        }
     }
 }
 
@@ -160,7 +157,7 @@ void install_peri() {
 
 void pallina(palla& p) {
     int r = 0, g = 0, b = 0;
-    
+
     if (p.colore == "red")
         r = 255;
     else if (p.colore == "green")
@@ -168,7 +165,8 @@ void pallina(palla& p) {
     else if (p.colore == "blue")
         b = 255;
 
-    if(p.piena)
+
+    if (p.piena)
         al_draw_filled_circle(p.coordinata.x, p.coordinata.y, p.raggio, al_map_rgb(r, g, b));
     else
         al_draw_circle(p.coordinata.x, p.coordinata.y, p.raggio, al_map_rgb(r, g, b), 2);
@@ -186,37 +184,6 @@ void draw_triangle(coordinate punta) {
     al_draw_filled_triangle(t.punta.x, t.punta.y, t.aDestra.x, t.aDestra.y, t.aSinistra.x, t.aSinistra.y, al_map_rgb(0, 0, 0));
     return;
 }
-    
-void draw_menu(coordinate punta) {
-    coordinate p1, p2;
-    p1.x = 300;
-    p1.y = 300;
-    p2.x = 500;
-    p2.y = 300;
-
-    al_draw_circle(p1.x, p1.y, 10, al_map_rgb(0, 0, 0), 3);
-    al_draw_filled_circle(p2.x, p2.y, 10, al_map_rgb(0, 0, 0));
-
-    draw_triangle(punta);
-    
-    return;
-}
-void muovi_menu(coordinate& punta, unsigned char key[], palla &p, bool& men) {
-    if (((key[ALLEGRO_KEY_A]) || (key[ALLEGRO_KEY_LEFT])))
-        punta.x = 300;
-    if (((key[ALLEGRO_KEY_D]) || (key[ALLEGRO_KEY_RIGHT])))
-        punta.x = 500;
-    if (key[ALLEGRO_KEY_ENTER]) {
-        if (punta.x == 300)
-            p.piena = false;
-        else
-            p.piena = true;
-        men = false;
-    }
-
-
-    return;
-}
 
 void muoviPalla(palla& p, unsigned char key[], dim_dysplay dim) {
     //muovimento sull'asse x
@@ -232,39 +199,85 @@ void muoviPalla(palla& p, unsigned char key[], dim_dysplay dim) {
 
     return;
 }
+void menu(palla& p, ALLEGRO_EVENT& event, bool& chiudi, int& n, bool& men) {
+    palla opt[6];
+    coordinate tr[6];
 
-//#########################
-//sperimentale
-void draw_menu2(coordinate punta, palla& pallina) {
-    coordinate cP[5];
-    cP[0].x = 300;
-    cP[0].y = 300;
-    for (int i = 1; i < 5; i++) {
-        cP[i].x = cP[i - 1].x + 100;
-        cP[i].y = cP[0].y;
+    opt[0].coordinata.x = 150;
+    opt[0].coordinata.y = 300;
+    opt[0].raggio = 10;
+
+    //inizializazione colore e se sono piene le paline
+    opt[0].colore = "red";
+    opt[0].piena = true;
+    opt[1].colore = "red";
+    opt[1].piena = false;
+    opt[2].colore = "blue";
+    opt[2].piena = true;
+    opt[3].colore = "blue";
+    opt[3].piena = false;
+    opt[4].colore = "green";
+    opt[4].piena = true;
+    opt[5].colore = "green";
+    opt[5].piena = false;
+
+    //coordinate delle paline a distanza dalla prima
+    for (int i = 1; i < size(opt); i++) {
+        opt[i].coordinata.x = opt[i - 1].coordinata.x + 100;
+        opt[i].coordinata.y = opt[i - 1].coordinata.y;
+        opt[i].raggio = opt[i - 1].raggio;
     }
-    
+    //coordinate per disegnare il triangolo
+    for (int i = 0; i < size(tr); i++) {
+        tr[i].x = opt[i].coordinata.x;
+        tr[i].y = opt[i].coordinata.y;
 
-    al_draw_circle(cP[0].x, cP[0].y, 10, al_map_rgb(0, 0, 0), 3);
-    al_draw_filled_circle(cP[2].x, cP[2].y, 10, al_map_rgb(0, 0, 0));
-
-    draw_triangle(punta);
-
-    return;
-}
-
-//##########################
-void muovi_menu2(coordinate& punta, coordinate opzioni[], unsigned char key[], bool& seleziona) {
-    int i = 0;
-    if (((key[ALLEGRO_KEY_A]) || (key[ALLEGRO_KEY_LEFT])))
-        punta.x -= 100;
-    if (((key[ALLEGRO_KEY_D]) || (key[ALLEGRO_KEY_RIGHT])))
-        punta.x += 100;
-    if (key[ALLEGRO_KEY_ENTER])
-        seleziona = true;
-
-        
+    }
 
 
+    switch (event.type)
+    {
+    case ALLEGRO_EVENT_KEY_DOWN:
+        switch (event.keyboard.keycode)
+        {
+        case ALLEGRO_KEY_ESCAPE:
+            chiudi = true;
+            break;
+        case ALLEGRO_KEY_RIGHT:
+        case ALLEGRO_KEY_D:
+            if (n < size(opt) - 1)
+                n++;
+            break;
+
+        case ALLEGRO_KEY_LEFT:
+        case ALLEGRO_KEY_A:
+            if (n > 0)
+                n--;
+            break;
+
+        case ALLEGRO_KEY_ENTER:
+            p.colore = opt[n].colore;
+            p.piena = opt[n].piena;
+            men = false;
+            break;
+
+        }
+        break;  //non cancelare in nesun caso
+    case ALLEGRO_EVENT_DISPLAY_CLOSE:
+        chiudi = true;
+        break;
+    }
+
+
+    al_clear_to_color(al_map_rgb(255, 255, 255));
+
+    for (int i = 0; i < size(opt); i++) {
+        pallina(opt[i]);
+    }
+
+
+    draw_triangle(tr[n]);
+
+    al_flip_display();
     return;
 }
